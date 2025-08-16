@@ -7,11 +7,17 @@ export default defineConfig({
   define: {
     global: 'globalThis',
   },
+  resolve: {
+    alias: {
+      '@': '/src',
+    },
+  },
   build: {
     target: 'esnext',
     minify: 'esbuild',
     sourcemap: false,
     rollupOptions: {
+      external: [],
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
@@ -26,7 +32,7 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom', '@octokit/rest', '@supabase/supabase-js'],
-    exclude: []
+    exclude: ['vue']
   },
   server: {
     port: 5173,

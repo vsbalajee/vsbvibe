@@ -58,6 +58,7 @@ export function DocumentationMode({
     function: 'Add JSDoc comments to all functions in the current file',
     inline: 'Add inline comments explaining complex logic in the current file',
     component: 'Document React/Vue components with props, usage examples, and descriptions',
+    component: 'Generate React components with props, usage examples, and descriptions',
     api: 'Generate API documentation for endpoints and data models',
     project_overview: 'Create high-level project documentation including architecture and setup'
   };

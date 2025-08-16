@@ -107,7 +107,6 @@ export class ProjectAnalyzer {
         const deps = { ...pkg.dependencies, ...pkg.devDependencies };
         
         if (deps.react) return 'React';
-        if (deps.vue) return 'Vue';
         if (deps.angular) return 'Angular';
         if (deps.svelte) return 'Svelte';
         if (deps.express) return 'Express';
@@ -122,13 +121,8 @@ export class ProjectAnalyzer {
       f.content?.includes("from 'react'")
     ).length;
 
-    const vueImports = files.filter(f => 
-      f.content?.includes("import Vue") || 
-      f.content?.includes(".vue")
-    ).length;
 
     if (reactImports > 0) return 'React';
-    if (vueImports > 0) return 'Vue';
     
     return 'Vanilla';
   }
