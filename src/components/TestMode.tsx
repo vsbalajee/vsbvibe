@@ -84,7 +84,6 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
         .filter(f => {
           const isFile = f.type === 'file';
           const hasValidPath = f.path && isCodeFile(f.path);
-          console.log('File:', f.path, 'isFile:', isFile, 'hasValidPath:', hasValidPath, 'hasContent:', !!f.content);
           return isFile && hasValidPath;
         })
         .map(f => ({
@@ -94,7 +93,6 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
           language: getLanguageFromPath(f.path)
         }));
       
-      console.log('Processed code files:', processedCodeFiles.length);
       setCodeFiles(processedCodeFiles);
       setLoading(false);
     };
@@ -105,7 +103,7 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
   useEffect(() => {
     // Auto-select all code files initially when codeFiles changes
     if (codeFiles.length > 0) {
-      console.log('Auto-selecting files:', codeFiles.length);
+      // Auto-select all files initially
     }
     setSelectedFiles(codeFiles.map(f => f.path));
   }, [codeFiles]);
@@ -543,7 +541,7 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
                 {codeFiles.map((file) => (
                   <label 
                     key={file.path} 
-                    className="flex items-center space-x-2 p-2 hover:bg-gray-700/50 rounded cursor-pointer transition-colors"
+                    className="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded cursor-pointer transition-colors"
                   >
                     <input
                       type="checkbox"
@@ -567,11 +565,11 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
                 ))}
               </div>
             )}
-            </div>
             
             <p className="text-xs text-gray-500 mt-2">
               Selected: {selectedFiles.length} of {codeFiles.length} files
             </p>
+          </div>
           </div>
 
           {/* Analysis Types */}
