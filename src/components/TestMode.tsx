@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { 
+import {
   TestTube, 
   Play, 
   Download, 
@@ -41,6 +41,13 @@ interface TestModeProps {
   onInstallDependencies?: (dependencies: string[]) => Promise<void>;
 }
 
+interface FileItem {
+  name: string;
+  path: string;
+  content?: string;
+  language: string;
+}
+
 export function TestMode({ files, repository, onInstallDependencies }: TestModeProps) {
   // Hoist isCodeFile function before usage to avoid temporal dead zone error
   const isCodeFile = (path: string): boolean => {
@@ -48,6 +55,8 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
     return codeExtensions.some(ext => path.toLowerCase().endsWith(ext));
   };
 
+  const [codeFiles, setCodeFiles] = useState<FileItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [analysisTypes, setAnalysisTypes] = useState({
     codeQuality: true,
@@ -66,15 +75,36 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
   const [batchSize, setBatchSize] = useState(3);
   const [includeFix, setIncludeFix] = useState(true);
 
-  // Get code files only
-  const codeFiles = files.filter(f => 
-    f.type === 'file' && 
-    f.content && 
-    isCodeFile(f.path)
-  );
+  // Process files and extract code files
+  useEffect(() => {
+    const processFiles = () => {
+      console.log('Processing files for TestMode:', files.length);
+      
+      const processedCodeFiles: FileItem[] = files
+        .filter(f => {
+          const isFile = f.type === 'file';
+          const hasValidPath = f.path && isCodeFile(f.path);
+          console.log(`File: ${f.path}, isFile: ${isFile}, hasValidPath: ${hasValidPath}, hasContent: ${!!f.content}`);
+          return isFile && hasValidPath;
+        })
+        .map(f => ({
+          name: f.name,
+          path: f.path,
+          content: f.content || '',
+          language: getLanguageFromPath(f.path)
+        }));
+      
+      console.log('Processed code files:', processedCodeFiles.length, processedCodeFiles.map(f => f.path));
+      setCodeFiles(processedCodeFiles);
+      setLoading(false);
+    };
+
+    processFiles();
+  }, [files]);
 
   useEffect(() => {
-    // Auto-select all code files initially
+    // Auto-select all code files initially when codeFiles changes
+    console.log('Auto-selecting files:', codeFiles.length);
     setSelectedFiles(codeFiles.map(f => f.path));
   }, [files]);
 
@@ -107,6 +137,7 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
   };
 
   const handleFileToggle = (filePath: string) => {
+    console.log('Toggling file:', filePath);
     setSelectedFiles(prev => 
       prev.includes(filePath) 
         ? prev.filter(f => f !== filePath)
@@ -115,10 +146,12 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
   };
 
   const handleSelectAll = () => {
+    console.log('Selecting all files');
     setSelectedFiles(codeFiles.map(f => f.path));
   };
 
   const handleClearAll = () => {
+    console.log('Clearing all files');
     setSelectedFiles([]);
   };
 
@@ -154,6 +187,7 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
   const runAnalysis = async () => {
     if (selectedFiles.length === 0) return;
 
+    console.log('Running analysis on files:', selectedFiles);
     setIsAnalyzing(true);
     setResults([]);
 
@@ -163,6 +197,11 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
 
       // Process files in batches
       for (let i = 0; i < selectedFileObjects.length; i += batchSize) {
+        console.log(`Processing batch ${Math.floor(i / batchSize) + 1} of ${Math.ceil(selectedFileObjects.length / batchSize)}`);
+        
+        // Update UI to show progress
+        const progress = Math.round((i / selectedFileObjects.length) * 100);
+        console.log(`Analysis progress: ${progress}%`);
         const batch = selectedFileObjects.slice(i, i + batchSize);
         
         const batchPromises = batch.map(async (file) => {
@@ -475,7 +514,7 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
         <div className="w-80 border-r border-gray-700 flex flex-col">
           {/* File Selection */}
           <div className="p-4 border-b border-gray-700">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-2">
               <h3 className="font-medium text-white">Select Files to Analyze</h3>
               <div className="flex space-x-2">
                 <button
@@ -493,18 +532,48 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
               </div>
             </div>
             
-            <div className="max-h-48 overflow-y-auto space-y-2">
-              {codeFiles.map((file) => (
-                <label key={file.path} className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selectedFiles.includes(file.path)}
-                    onChange={() => handleFileToggle(file.path)}
-                    className="rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-gray-300 truncate">{file.name}</span>
-                </label>
-              ))}
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                <span className="ml-2 text-sm text-gray-400">Loading files...</span>
+              </div>
+            ) : codeFiles.length === 0 ? (
+              <div className="text-center py-8">
+                <FileText className="h-8 w-8 text-gray-600 mx-auto mb-2" />
+                <p className="text-sm text-gray-400">No code files found</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Supported: .js, .jsx, .ts, .tsx, .py, .java, .cpp, .c, .cs, .php, .rb, .go, .rs, .html, .css, .scss, .json, .md, .yml, .yaml, .xml
+                </p>
+              </div>
+            ) : (
+              <div className="max-h-64 overflow-y-auto space-y-1">
+                {codeFiles.map((file) => (
+                  <label 
+                    key={file.path} 
+                    className="flex items-center space-x-2 p-2 hover:bg-gray-700/50 rounded cursor-pointer transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedFiles.includes(file.path)}
+                      onChange={() => handleFileToggle(file.path)}
+                      className="rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm text-gray-300 truncate">{file.name}</div>
+                      <div className="text-xs text-gray-500 truncate">{file.path}</div>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded ${
+                      file.language === 'javascript' || file.language === 'typescript' ? 'bg-yellow-500/20 text-yellow-400' :
+                      file.language === 'python' ? 'bg-green-500/20 text-green-400' :
+                      file.language === 'html' || file.language === 'css' ? 'bg-orange-500/20 text-orange-400' :
+                      'bg-gray-500/20 text-gray-400'
+                    }`}>
+                      {file.language}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            )}
             </div>
             
             <p className="text-xs text-gray-500 mt-2">
@@ -599,7 +668,7 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
           <div className="p-4">
             <button
               onClick={runAnalysis}
-              disabled={selectedFiles.length === 0 || isAnalyzing || !Object.values(analysisTypes).some(Boolean)}
+              disabled={selectedFiles.length === 0 || isAnalyzing || !Object.values(analysisTypes).some(Boolean) || loading}
               className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
             >
               {isAnalyzing ? (
@@ -609,7 +678,7 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
               )}
               <span>
                 {isAnalyzing ? 'Analyzing...' : `Analyze ${selectedFiles.length} Files`}
-              </span>
+              </span> 
             </button>
           </div>
         </div>
