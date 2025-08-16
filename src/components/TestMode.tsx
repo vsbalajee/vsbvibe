@@ -84,7 +84,7 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
         .filter(f => {
           const isFile = f.type === 'file';
           const hasValidPath = f.path && isCodeFile(f.path);
-          console.log(`File: ${f.path}, isFile: ${isFile}, hasValidPath: ${hasValidPath}, hasContent: ${!!f.content}`);
+          console.log('File:', f.path, 'isFile:', isFile, 'hasValidPath:', hasValidPath, 'hasContent:', !!f.content);
           return isFile && hasValidPath;
         })
         .map(f => ({
@@ -94,7 +94,7 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
           language: getLanguageFromPath(f.path)
         }));
       
-      console.log('Processed code files:', processedCodeFiles.length, processedCodeFiles.map(f => f.path));
+      console.log('Processed code files:', processedCodeFiles.length);
       setCodeFiles(processedCodeFiles);
       setLoading(false);
     };
@@ -104,12 +104,14 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
 
   useEffect(() => {
     // Auto-select all code files initially when codeFiles changes
-    console.log('Auto-selecting files:', codeFiles.length);
+    if (codeFiles.length > 0) {
+      console.log('Auto-selecting files:', codeFiles.length);
+    }
     setSelectedFiles(codeFiles.map(f => f.path));
-  }, [files]);
+  }, [codeFiles]);
 
   const getLanguageFromPath = (path: string): string => {
-    const ext = path.split('.').pop()?.toLowerCase();
+    const ext = path.split('.').pop()?.toLowerCase() || '';
     const langMap: { [key: string]: string } = {
       'js': 'javascript',
       'jsx': 'javascript',
@@ -133,11 +135,10 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
       'yaml': 'yaml',
       'xml': 'xml'
     };
-    return langMap[ext || ''] || 'text';
+    return langMap[ext] || 'text';
   };
 
   const handleFileToggle = (filePath: string) => {
-    console.log('Toggling file:', filePath);
     setSelectedFiles(prev => 
       prev.includes(filePath) 
         ? prev.filter(f => f !== filePath)
@@ -146,12 +147,10 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
   };
 
   const handleSelectAll = () => {
-    console.log('Selecting all files');
     setSelectedFiles(codeFiles.map(f => f.path));
   };
 
   const handleClearAll = () => {
-    console.log('Clearing all files');
     setSelectedFiles([]);
   };
 
@@ -187,7 +186,6 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
   const runAnalysis = async () => {
     if (selectedFiles.length === 0) return;
 
-    console.log('Running analysis on files:', selectedFiles);
     setIsAnalyzing(true);
     setResults([]);
 
@@ -197,11 +195,6 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
 
       // Process files in batches
       for (let i = 0; i < selectedFileObjects.length; i += batchSize) {
-        console.log(`Processing batch ${Math.floor(i / batchSize) + 1} of ${Math.ceil(selectedFileObjects.length / batchSize)}`);
-        
-        // Update UI to show progress
-        const progress = Math.round((i / selectedFileObjects.length) * 100);
-        console.log(`Analysis progress: ${progress}%`);
         const batch = selectedFileObjects.slice(i, i + batchSize);
         
         const batchPromises = batch.map(async (file) => {
@@ -231,7 +224,7 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
               performance_notes: performanceAnalysis.best_practices
             };
           } catch (error) {
-            console.error(`Error analyzing ${file.name}:`, error);
+            console.error('Error analyzing file:', file.name, error);
             return {
               fileName: file.name,
               language: getLanguageFromPath(file.path),
@@ -239,9 +232,9 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
               maintainabilityScore: 0,
               performanceScore: 0,
               issues: [{
-                type: 'error' as const,
+                type: 'error',
                 message: `Failed to analyze: ${error instanceof Error ? error.message : 'Unknown error'}`,
-                severity: 'high' as const
+                severity: 'high'
               }],
               strengths: [],
               improvements: [],
