@@ -1,0 +1,11 @@
+{
+  "application": {
+    "name": "Bolt Vibe Coding Platform",
+    "description": "A coding platform with advanced AI chat intelligence.",
+    "ai_chat_intelligence": {
+      "response_style": "step_by_step",
+      "response_format": "suggestions_and_guidance",
+      "code_generation": "external_files",
+      "examples": {
+        "user_prompt": "Create a help file for this project",
+        "bolt_response": "To create a help file for this project, follow these steps:\n1. Open your project directory in a code editor.\n2. Create a new file named `HELP.md`.\n3. Add the following content to the file:\n
