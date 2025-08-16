@@ -19,7 +19,6 @@ import {
   Copy,
   Star,
   Sparkles
-  BarChart
 } from 'lucide-react';
 
 interface ProjectGenerationModeProps {

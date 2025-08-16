@@ -83,7 +83,7 @@ export class OpenRouterAI {
         this.apiKey = import.meta.env.VITE_OPENROUTER_API_KEY || '';
         this.baseUrl = import.meta.env.VITE_OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
       }
-    } catch (error) {
+    } catch (error: any) {
       console.warn('Failed to load AI settings from localStorage:', error);
       // Fallback to environment variables
       this.apiKey = import.meta.env.VITE_OPENROUTER_API_KEY || '';

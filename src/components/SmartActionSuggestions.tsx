@@ -24,7 +24,7 @@ import {
   Palette,
   Lock,
   Mail,
-  BarChart,
+  BarChart3,
   Filter,
   Tag,
   Heart,
@@ -81,7 +81,6 @@ import {
   UserCheck,
   UserX,
   Users as UsersIcon,
-  Team,
   Crown,
   Key,
   Fingerprint,
@@ -610,10 +609,6 @@ import {
   Duck as DuckIconMexican,
   Florida,
   Mottled as MottledIcon,
-  Rocket,
-  Building2,
-  BarChart3,
-  Shield
 } from 'lucide-react';
 
 interface ActionSuggestion {
