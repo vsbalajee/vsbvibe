@@ -103,9 +103,8 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
   useEffect(() => {
     // Auto-select all code files initially when codeFiles changes
     if (codeFiles.length > 0) {
-      // Auto-select all files initially
+      setSelectedFiles(codeFiles.map(f => f.path));
     }
-    setSelectedFiles(codeFiles.map(f => f.path));
   }, [codeFiles]);
 
   const getLanguageFromPath = (path: string): string => {
@@ -230,9 +229,9 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
               maintainabilityScore: 0,
               performanceScore: 0,
               issues: [{
-                type: 'error',
-                message: `Failed to analyze: ${error instanceof Error ? error.message : 'Unknown error'}`,
-                severity: 'high'
+                type: 'error' as const,
+                message: 'Failed to analyze: ' + (error instanceof Error ? error.message : 'Unknown error'),
+                severity: 'high' as const
               }],
               strengths: [],
               improvements: [],
@@ -267,7 +266,7 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `code_analysis_${repository?.name || 'project'}_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = 'code_analysis_' + (repository?.name || 'project') + '_' + new Date().toISOString().split('T')[0] + '.json';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -439,7 +438,7 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `code_analysis_report_${repository?.name || 'project'}_${new Date().toISOString().split('T')[0]}.doc`;
+    a.download = 'code_analysis_report_' + (repository?.name || 'project') + '_' + new Date().toISOString().split('T')[0] + '.doc';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -570,7 +569,6 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
               Selected: {selectedFiles.length} of {codeFiles.length} files
             </p>
           </div>
-          </div>
 
           {/* Analysis Types */}
           <div className="p-4 border-b border-gray-700">
@@ -684,7 +682,7 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
                     <Filter className="h-4 w-4 text-gray-400" />
                     <select
                       value={filter}
-                      onChange={(e) => setFilter(e.target.value as any)}
+                      onChange={(e) => setFilter(e.target.value as 'all' | 'errors' | 'warnings' | 'suggestions')}
                       className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-sm"
                     >
                       <option value="all">All Results</option>
@@ -696,7 +694,7 @@ export function TestMode({ files, repository, onInstallDependencies }: TestModeP
                   
                   <select
                     value={severityFilter}
-                    onChange={(e) => setSeverityFilter(e.target.value as any)}
+                    onChange={(e) => setSeverityFilter(e.target.value as 'all' | 'high' | 'medium' | 'low')}
                     className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-sm"
                   >
                     <option value="all">All Severities</option>
